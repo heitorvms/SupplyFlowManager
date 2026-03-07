@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.projedata</groupId>
-	<artifactId>SupplyFlow-Manager</artifactId>
+	<artifactId>SupplyFlowManagerAPI</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>SupplyFlow-Manager</name>
 	<description>Industrial production management system for raw material control and production optimization.</description>

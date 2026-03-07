@@ -7,7 +7,7 @@ public class ProductComposition {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private Long code;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
