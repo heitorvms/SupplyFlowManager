@@ -4,6 +4,7 @@ import com.projedata.SupplyFlow.Manager.dto.ProductRequestDTO;
 import com.projedata.SupplyFlow.Manager.dto.ProductResponseDTO;
 import com.projedata.SupplyFlow.Manager.entity.Product;
 import com.projedata.SupplyFlow.Manager.repository.ProductRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -59,4 +60,13 @@ public class ProductService {
                 updated.getPrice()
         );
     }
+
+    public void delete(Long code) {
+        Product product = productRepository
+                .findById(code)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + code));
+
+        productRepository.delete(product);
+    }
+
 }

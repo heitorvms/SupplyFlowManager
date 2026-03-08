@@ -7,12 +7,12 @@ import java.math.BigDecimal;
 @Data
 public class ProductResponseDTO {
 
-    private Long id;
+    private Long code;
     private String name;
     private BigDecimal price;
 
-    public ProductResponseDTO(Long id, String name, BigDecimal price) {
-        this.id = id;
+    public ProductResponseDTO(Long code, String name, BigDecimal price) {
+        this.code = code;
         this.name = name;
         this.price = price;
     }
