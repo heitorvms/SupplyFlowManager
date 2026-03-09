@@ -1,5 +1,6 @@
 package com.projedata.SupplyFlow.Manager.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -20,6 +21,7 @@ public class Product {
     private BigDecimal price;
 
     @OneToMany(mappedBy = "product")
+    @JsonManagedReference
     private List<ProductComposition> compositions;
 
 }
