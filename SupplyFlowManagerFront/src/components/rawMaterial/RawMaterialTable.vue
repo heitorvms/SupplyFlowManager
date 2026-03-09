@@ -6,21 +6,24 @@
       </div>
 
       <v-text-field
-        v-model="search"
+        :model-value="search"
         class="search-field"
         prepend-inner-icon="mdi-magnify"
-        label="Buscar materia-prima"
+        label="Search raw material"
+        hint="Type at least 2 characters"
+        persistent-hint
         variant="outlined"
         density="comfortable"
-        hide-details
+        hide-details="auto"
         clearable
+        @update:model-value="$emit('update:search', String($event ?? ''))"
       />
     </div>
 
     <div class="table-wrapper">
       <v-data-table
         :headers="headers"
-        :items="filteredRawMaterials"
+        :items="rawMaterials"
         :loading="loading"
         :mobile="smAndDown"
         :density="smAndDown ? 'comfortable' : 'default'"
@@ -55,11 +58,11 @@
 
     <div class="table-footer">
       <p class="footer-range">
-        Mostrando {{ startItem }}-{{ endItem }} de {{ totalItems }} itens
+        Showing {{ startItem }}-{{ endItem }} of {{ totalItems }} items
       </p>
 
       <div class="footer-controls">
-        <span class="page-size-label">Itens</span>
+        <span class="page-size-label">Items</span>
         <v-menu v-model="pageSizeMenu" location="top">
           <template #activator="{ props: menuProps }">
             <v-btn
@@ -108,6 +111,7 @@ const props = defineProps<{
   totalItems: number
   page: number
   itemsPerPage: number
+  search: string
 }>();
 
 const emit = defineEmits<{
@@ -115,22 +119,9 @@ const emit = defineEmits<{
   (e: "delete", rawMaterial: RawMaterial): void
   (e: "update:page", value: number): void
   (e: "update:itemsPerPage", value: number): void
+  (e: "update:search", value: string): void
 }>();
-
-const search = ref("");
 const pageSizeMenu = ref(false);
-
-const filteredRawMaterials = computed(() => {
-  const value = search.value.trim().toLowerCase();
-
-  if (!value) {
-    return props.rawMaterials;
-  }
-
-  return props.rawMaterials.filter((rawMaterial) =>
-    rawMaterial.name.toLowerCase().includes(value)
-  );
-});
 
 const { smAndDown } = useDisplay();
 

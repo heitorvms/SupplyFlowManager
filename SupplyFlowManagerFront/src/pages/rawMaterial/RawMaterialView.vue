@@ -24,10 +24,12 @@
       :total-items="totalItems"
       :page="page"
       :items-per-page="itemsPerPage"
+      :search="search"
       @edit="openEdit"
       @delete="openDelete"
       @update:page="page = $event"
       @update:items-per-page="itemsPerPage = $event"
+      @update:search="search = $event"
     />
   </section>
 
@@ -44,18 +46,16 @@
     @confirm="confirmDeleteRawMaterial"
   />
 
-  <v-snackbar
+  <AppFeedbackSnackbar
     v-model="snackbar.show"
+    :text="snackbar.text"
     :color="snackbar.color"
-    location="top right"
-    timeout="3200"
-  >
-    {{ snackbar.text }}
-  </v-snackbar>
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
+import AppFeedbackSnackbar from "@/components/AppFeedbackSnackbar.vue";
 import RawMaterialTable from "@/components/rawMaterial/RawMaterialTable.vue";
 import RawMaterialForm from "@/components/rawMaterial/RawMaterialForm.vue";
 import RawMaterialDeleteDialog from "@/components/rawMaterial/RawMaterialDeleteDialog.vue";
@@ -69,9 +69,14 @@ const rawMaterials = ref<RawMaterial[]>([]);
 const totalItems = ref(0);
 const page = ref(1);
 const itemsPerPage = ref(10);
+const search = ref("");
+const debouncedSearch = ref("");
 const loading = ref(false);
 const deleteDialog = ref(false);
 const formDialog = ref(false);
+const searchPool = ref<RawMaterial[]>([]);
+const searchCacheTerm = ref("");
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const snackbar = ref({
   show: false,
@@ -84,16 +89,78 @@ const selectedRawMaterial = ref<RawMaterial | null>(null);
 async function loadRawMaterials() {
   loading.value = true;
   try {
-    const data = await getRawMaterials(page.value - 1, itemsPerPage.value);
+    const normalizedSearch = debouncedSearch.value.trim().toLowerCase();
 
-    rawMaterials.value = data.content;
-    totalItems.value = data.totalElements;
+    if (!normalizedSearch || normalizedSearch.length < 2) {
+      const data = await getRawMaterials(page.value - 1, itemsPerPage.value);
+      rawMaterials.value = data.content;
+      totalItems.value = data.totalElements;
+      searchPool.value = [];
+      searchCacheTerm.value = "";
+      return;
+    }
+
+    if (searchCacheTerm.value !== normalizedSearch || searchPool.value.length === 0) {
+      searchPool.value = await loadAllRawMaterials();
+      searchCacheTerm.value = normalizedSearch;
+    }
+
+    const filtered = searchPool.value.filter((rawMaterial) =>
+      rawMaterial.name.toLowerCase().includes(normalizedSearch),
+    );
+
+    totalItems.value = filtered.length;
+
+    const start = (page.value - 1) * itemsPerPage.value;
+    const end = start + itemsPerPage.value;
+    rawMaterials.value = filtered.slice(start, end);
   } finally {
     loading.value = false;
   }
 }
 
 watch([page, itemsPerPage], loadRawMaterials, { immediate: true });
+
+watch(search, () => {
+  page.value = 1;
+
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer);
+  }
+
+  searchDebounceTimer = setTimeout(() => {
+    debouncedSearch.value = search.value;
+    loadRawMaterials();
+  }, 450);
+});
+
+onBeforeUnmount(() => {
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer);
+  }
+});
+
+async function loadAllRawMaterials() {
+  const firstPageSize = 100;
+  const firstPage = await getRawMaterials(0, firstPageSize);
+
+  if (firstPage.totalPages <= 1) {
+    return firstPage.content;
+  }
+
+  const pageRequests: Array<Promise<Awaited<ReturnType<typeof getRawMaterials>>>> = [];
+
+  for (let currentPage = 1; currentPage < firstPage.totalPages; currentPage += 1) {
+    pageRequests.push(getRawMaterials(currentPage, firstPageSize));
+  }
+
+  const remainingPages = await Promise.all(pageRequests);
+
+  return [
+    ...firstPage.content,
+    ...remainingPages.flatMap((pageData) => pageData.content),
+  ];
+}
 
 function openCreate() {
   selectedRawMaterial.value = null;
@@ -113,7 +180,7 @@ function openDelete(rawMaterial: RawMaterial) {
 function handleRawMaterialSaved() {
   snackbar.value = {
     show: true,
-    text: "Materia-prima salva com sucesso.",
+    text: "Raw material saved successfully.",
     color: "success",
   };
 
@@ -130,7 +197,7 @@ function handleRawMaterialError(message: string) {
 
 async function confirmDeleteRawMaterial(rawMaterial: RawMaterial) {
   if (!rawMaterial.code) {
-    handleRawMaterialError("Codigo da materia-prima invalido para exclusao.");
+    handleRawMaterialError("Invalid raw material code for deletion.");
     return;
   }
 
@@ -138,14 +205,14 @@ async function confirmDeleteRawMaterial(rawMaterial: RawMaterial) {
     await deleteRawMaterial(rawMaterial.code);
     snackbar.value = {
       show: true,
-      text: "Materia-prima excluida com sucesso.",
+      text: "Raw material deleted successfully.",
       color: "success",
     };
 
     await loadRawMaterials();
   } catch (error) {
     console.error("Error deleting raw material:", error);
-    handleRawMaterialError("Nao foi possivel excluir a materia-prima. Tente novamente.");
+    handleRawMaterialError("Could not delete raw material. Please try again.");
   }
 }
 </script>

@@ -114,7 +114,7 @@ const priceRule = (value: number) => value >= 0 || "Price must be non-negative";
 
 async function save() {
   if (!form.value.name?.trim() || form.value.price < 0) {
-    emit("error", "Preencha os campos obrigatórios corretamente.");
+    emit("error", "Please fill in the required fields correctly.");
     return;
   }
 
@@ -131,8 +131,8 @@ async function save() {
     emit(
       "error",
       props.product?.code
-        ? "Nao foi possivel atualizar o produto. Tente novamente."
-        : "Nao foi possivel salvar o produto. Tente novamente.",
+        ? "Could not update product. Please try again."
+        : "Could not save product. Please try again.",
     );
   } finally {
     saving.value = false;

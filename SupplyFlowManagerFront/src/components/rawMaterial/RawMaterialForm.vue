@@ -133,7 +133,7 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error("Error loading unit enums:", error);
-    emit("error", "Nao foi possivel carregar os enums de unidade.");
+    emit("error", "Could not load unit enums.");
   }
 });
 
@@ -163,7 +163,7 @@ const quantityRule = (value: number) => value >= 0 || "Quantity must be non-nega
 
 async function save() {
   if (!form.value.name?.trim() || !form.value.unitOfMeasure?.trim() || form.value.stockQuantity < 0) {
-    emit("error", "Preencha os campos obrigatorios corretamente.");
+    emit("error", "Please fill in the required fields correctly.");
     return;
   }
 
@@ -180,8 +180,8 @@ async function save() {
     emit(
       "error",
       props.rawMaterial?.code
-        ? "Nao foi possivel atualizar a materia-prima. Tente novamente."
-        : "Nao foi possivel salvar a materia-prima. Tente novamente.",
+        ? "Could not update raw material. Please try again."
+        : "Could not save raw material. Please try again.",
     );
   } finally {
     saving.value = false;
