@@ -24,10 +24,12 @@
       :total-items="totalItems"
       :page="page"
       :items-per-page="itemsPerPage"
+      :search="search"
       @edit="openEdit"
       @delete="openDelete"
       @update:page="page = $event"
       @update:items-per-page="itemsPerPage = $event"
+      @update:search="search = $event"
     />
   </section>
 
@@ -44,18 +46,16 @@
     @confirm="confirmDeleteProduct"
   />
 
-  <v-snackbar
+  <AppFeedbackSnackbar
     v-model="snackbar.show"
+    :text="snackbar.text"
     :color="snackbar.color"
-    location="top right"
-    timeout="3200"
-  >
-    {{ snackbar.text }}
-  </v-snackbar>
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
+import AppFeedbackSnackbar from "@/components/AppFeedbackSnackbar.vue";
 import ProductTable from "@/components/products/ProductTable.vue";
 import ProductForm from "@/components/products/ProductForm.vue";
 import ProductDeleteDialog from "@/components/products/ProductDeleteDialog.vue";
@@ -66,8 +66,13 @@ const products = ref<Product[]>([]);
 const totalItems = ref(0);
 const page = ref(1);
 const itemsPerPage = ref(10);
+const search = ref("");
+const debouncedSearch = ref("");
 const loading = ref(false);
 const deleteDialog = ref(false);
+const searchPool = ref<Product[]>([]);
+const searchCacheTerm = ref("");
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 const snackbar = ref({
   show: false,
   text: "",
@@ -77,16 +82,77 @@ const snackbar = ref({
 async function loadProducts() {
   loading.value = true;
   try {
-    const data = await getProducts(page.value - 1, itemsPerPage.value);
+    const normalizedSearch = debouncedSearch.value.trim().toLowerCase();
 
-    products.value = data.content;
-    totalItems.value = data.totalElements;
+    if (!normalizedSearch || normalizedSearch.length < 2) {
+      const data = await getProducts(page.value - 1, itemsPerPage.value);
+      products.value = data.content;
+      totalItems.value = data.totalElements;
+      searchPool.value = [];
+      searchCacheTerm.value = "";
+      return;
+    }
+
+    if (searchCacheTerm.value !== normalizedSearch || searchPool.value.length === 0) {
+      searchPool.value = await loadAllProducts();
+      searchCacheTerm.value = normalizedSearch;
+    }
+
+    const filtered = searchPool.value.filter((product) =>
+      product.name.toLowerCase().includes(normalizedSearch),
+    );
+
+    totalItems.value = filtered.length;
+    const start = (page.value - 1) * itemsPerPage.value;
+    const end = start + itemsPerPage.value;
+    products.value = filtered.slice(start, end);
   } finally {
     loading.value = false;
   }
 }
 
 watch([page, itemsPerPage], loadProducts, { immediate: true });
+
+watch(search, () => {
+  page.value = 1;
+
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer);
+  }
+
+  searchDebounceTimer = setTimeout(() => {
+    debouncedSearch.value = search.value;
+    loadProducts();
+  }, 450);
+});
+
+onBeforeUnmount(() => {
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer);
+  }
+});
+
+async function loadAllProducts() {
+  const firstPageSize = 100;
+  const firstPage = await getProducts(0, firstPageSize);
+
+  if (firstPage.totalPages <= 1) {
+    return firstPage.content;
+  }
+
+  const pageRequests: Array<Promise<Awaited<ReturnType<typeof getProducts>>>> = [];
+
+  for (let currentPage = 1; currentPage < firstPage.totalPages; currentPage += 1) {
+    pageRequests.push(getProducts(currentPage, firstPageSize));
+  }
+
+  const remainingPages = await Promise.all(pageRequests);
+
+  return [
+    ...firstPage.content,
+    ...remainingPages.flatMap((pageData) => pageData.content),
+  ];
+}
 
 const formDialog = ref(false);
 const selectedProduct = ref<Product | null>(null);
@@ -109,7 +175,7 @@ function openDelete(product: Product) {
 function handleProductSaved() {
   snackbar.value = {
     show: true,
-    text: "Produto salvo com sucesso.",
+    text: "Product saved successfully.",
     color: "success",
   };
 
@@ -126,7 +192,7 @@ function handleProductError(message: string) {
 
 async function confirmDeleteProduct(product: Product) {
   if (!product.code) {
-    handleProductError("Codigo do produto invalido para exclusao.");
+    handleProductError("Invalid product code for deletion.");
     return;
   }
 
@@ -134,14 +200,14 @@ async function confirmDeleteProduct(product: Product) {
     await deleteProduct(product.code);
     snackbar.value = {
       show: true,
-      text: "Produto excluido com sucesso.",
+      text: "Product deleted successfully.",
       color: "success",
     };
 
     await loadProducts();
   } catch (error) {
     console.error("Error deleting product:", error);
-    handleProductError("Nao foi possivel excluir o produto. Tente novamente.");
+    handleProductError("Could not delete product. Please try again.");
   }
 }
 </script>

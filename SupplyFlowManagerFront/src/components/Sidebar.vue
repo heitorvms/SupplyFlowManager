@@ -35,6 +35,22 @@
           rounded="xl"
           @click="handleItemClick"
         />
+
+        <v-list-item
+          prepend-icon="mdi-format-list-bulleted-square"
+          :title="rail && !mobile ? undefined : 'Product Composition'"
+          to="/product-composition"
+          rounded="xl"
+          @click="handleItemClick"
+        />
+
+        <v-list-item
+          prepend-icon="mdi-chart-areaspline"
+          :title="rail && !mobile ? undefined : 'Production Optimization'"
+          to="/production-optimization"
+          rounded="xl"
+          @click="handleItemClick"
+        />
       </v-list>
     </div>
   </v-navigation-drawer>

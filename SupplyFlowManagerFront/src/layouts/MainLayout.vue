@@ -1,7 +1,7 @@
 <template>
   <v-app
     class="app-shell"
-    :style="{ '--drawer-offset': drawerOffset, '--topbar-height': '72px' }"
+    :style="{ '--topbar-height': '72px', '--content-offset': contentOffset }"
   >
     <Sidebar
       v-model="drawer"
@@ -18,12 +18,9 @@
         @click="toggleDrawer"
       />
 
-      <v-toolbar-title class="topbar-title">
+      <div class="topbar-title">
         SupplyFlow Manager
-      </v-toolbar-title>
-
-      <v-spacer />
-
+      </div>
     </v-app-bar>
 
     <v-main class="main-content">
@@ -45,12 +42,12 @@ const DESKTOP_RAIL_WIDTH = 86;
 
 const drawer = ref(!mdAndDown.value);
 const rail = ref(false);
-const drawerOffset = computed(() => {
+const contentOffset = computed(() => {
   if (mdAndDown.value) {
     return "0px";
   }
 
-  return `${rail.value ? DESKTOP_RAIL_WIDTH : DESKTOP_DRAWER_WIDTH}px`;
+  return rail.value ? `${DESKTOP_RAIL_WIDTH}px` : `${DESKTOP_DRAWER_WIDTH}px`;
 });
 
 watch(mdAndDown, (isMobile) => {
@@ -91,21 +88,24 @@ function toggleRail() {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(8, 13, 22, 0.92);
   backdrop-filter: blur(10px);
-  padding-inline-start: var(--drawer-offset);
-  transition: padding-inline-start 220ms ease;
   position: sticky;
   top: 0;
   z-index: 1200;
 }
 
 .topbar :deep(.v-toolbar__content) {
+  justify-content: flex-start !important;
+  gap: 4px;
   padding-inline: 6px 14px;
 }
 
 .topbar-title {
+  flex: 0 0 auto !important;
   font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1;
   letter-spacing: 0.02em;
-  margin-inline-start: 4px;
+  margin-inline-start: 0;
 }
 
 .topbar-btn {
@@ -119,12 +119,14 @@ function toggleRail() {
 
 .main-content {
   background: transparent;
-  padding-inline-start: var(--drawer-offset);
+  padding-inline-start: var(--content-offset);
   padding-block-start: calc(var(--topbar-height) + 8px);
   transition: padding-inline-start 220ms ease;
 }
 
 .page-container {
+  width: 100%;
+  margin: 0 auto;
   padding: clamp(16px, 2.4vw, 32px);
   max-width: 1400px;
 }
