@@ -7,27 +7,25 @@
             <v-icon icon="mdi-alert-outline" />
           </v-avatar>
           <div>
-            <p class="title-kicker">Confirmation</p>
-            <h3>Delete Product</h3>
+            <p class="title-kicker">{{ t("common.confirmation") }}</p>
+            <h3>{{ t("products.deleteTitle") }}</h3>
           </div>
         </div>
       </v-card-title>
 
       <v-card-text class="delete-content">
         <p>
-          Are you sure you want to delete the product
-          <strong>{{ product?.name }}</strong
-          >?
+          {{ t("products.deletePrompt", { name: product?.name ?? '' }) }}
         </p>
-        <p class="delete-warning">This action cannot be undone.</p>
+        <p class="delete-warning">{{ t("common.thisActionCannotBeUndone") }}</p>
       </v-card-text>
 
       <v-card-actions class="delete-actions">
         <v-spacer />
 
-        <v-btn class="action-btn" variant="text" @click="close">Cancel</v-btn>
+        <v-btn class="action-btn" variant="text" @click="close">{{ t("common.cancel") }}</v-btn>
 
-        <v-btn class="action-btn" color="error" @click="confirm">Delete</v-btn>
+        <v-btn class="action-btn" color="error" @click="confirm">{{ t("common.delete") }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -35,6 +33,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps({
   modelValue: Boolean,
@@ -44,6 +43,7 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue", "confirm"]);
 
 const dialog = ref(false);
+const { t } = useI18n();
 
 watch(
   () => props.modelValue,

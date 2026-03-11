@@ -22,7 +22,7 @@
       <v-list nav density="comfortable" class="menu-list">
         <v-list-item
           prepend-icon="mdi-cube-outline"
-          :title="rail && !mobile ? undefined : 'Products'"
+          :title="rail && !mobile ? undefined : t('sidebar.products')"
           to="/products"
           rounded="xl"
           @click="handleItemClick"
@@ -30,7 +30,7 @@
 
         <v-list-item
           prepend-icon="mdi-package-variant-closed"
-          :title="rail && !mobile ? undefined : 'Raw Materials'"
+          :title="rail && !mobile ? undefined : t('sidebar.rawMaterials')"
           to="/raw-materials"
           rounded="xl"
           @click="handleItemClick"
@@ -38,7 +38,7 @@
 
         <v-list-item
           prepend-icon="mdi-format-list-bulleted-square"
-          :title="rail && !mobile ? undefined : 'Product Composition'"
+          :title="rail && !mobile ? undefined : t('sidebar.productComposition')"
           to="/product-composition"
           rounded="xl"
           @click="handleItemClick"
@@ -46,7 +46,7 @@
 
         <v-list-item
           prepend-icon="mdi-chart-areaspline"
-          :title="rail && !mobile ? undefined : 'Production Optimization'"
+          :title="rail && !mobile ? undefined : t('sidebar.productionOptimization')"
           to="/production-optimization"
           rounded="xl"
           @click="handleItemClick"
@@ -58,6 +58,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   modelValue: boolean
@@ -78,6 +79,8 @@ const drawerState = computed({
     }
   },
 });
+
+const { t } = useI18n();
 
 function handleItemClick() {
   if (props.mobile) {

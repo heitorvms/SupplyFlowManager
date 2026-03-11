@@ -3,8 +3,8 @@
     <v-sheet class="hero" rounded="xl">
       <div class="hero-content">
         <div>
-          <h1>Production Optimization</h1>
-          <p>Analyze what can be produced with the current stock and expected total revenue.</p>
+          <h1>{{ t("optimization.title") }}</h1>
+          <p>{{ t("optimization.subtitle") }}</p>
         </div>
 
         <v-btn
@@ -15,7 +15,7 @@
           :loading="loading"
           @click="analyzeProduction"
         >
-          Analyze Production
+          {{ t("optimization.analyze") }}
         </v-btn>
       </div>
     </v-sheet>
@@ -36,10 +36,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import AppFeedbackSnackbar from "@/components/AppFeedbackSnackbar.vue";
 import ProductionOptimizationTable from "@/components/productionOptimization/ProductionOptimizationTable.vue";
 import type { ProductionOptimizationItem } from "@/types/ProductionOptimization";
 import { getProductionOptimization } from "@/services/productionService";
+import { resolveApiErrorMessage } from "@/utils/apiError";
+
+const { t } = useI18n();
 
 const items = ref<ProductionOptimizationItem[]>([]);
 const loading = ref(false);
@@ -72,14 +76,14 @@ async function analyzeProduction() {
     items.value = await getProductionOptimization();
     snackbar.value = {
       show: true,
-      text: "Production analysis completed successfully.",
+      text: t("optimization.analysisSuccess"),
       color: "success",
     };
   } catch (error) {
     console.error("Error optimizing production:", error);
     snackbar.value = {
       show: true,
-      text: "Could not analyze production.",
+      text: resolveApiErrorMessage(error, t, { defaultKey: "optimization.analysisError" }),
       color: "error",
     };
   } finally {

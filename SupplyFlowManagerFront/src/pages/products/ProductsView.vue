@@ -3,7 +3,7 @@
     <v-sheet class="hero" rounded="xl">
       <div class="hero-content">
         <div>
-          <h1>Products</h1>
+          <h1>{{ t("products.title") }}</h1>
         </div>
 
         <v-btn
@@ -13,7 +13,7 @@
           prepend-icon="mdi-plus"
           @click="openCreate"
         >
-          New Product
+          {{ t("products.new") }}
         </v-btn>
       </div>
     </v-sheet>
@@ -55,12 +55,16 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import AppFeedbackSnackbar from "@/components/AppFeedbackSnackbar.vue";
 import ProductTable from "@/components/products/ProductTable.vue";
 import ProductForm from "@/components/products/ProductForm.vue";
 import ProductDeleteDialog from "@/components/products/ProductDeleteDialog.vue";
 import type { Product } from "@/types/Product";
 import { deleteProduct, getProducts } from "@/services/productService";
+import { resolveApiErrorMessage } from "@/utils/apiError";
+
+const { t } = useI18n();
 
 const products = ref<Product[]>([]);
 const totalItems = ref(0);
@@ -175,7 +179,7 @@ function openDelete(product: Product) {
 function handleProductSaved() {
   snackbar.value = {
     show: true,
-    text: "Product saved successfully.",
+    text: t("products.savedSuccess"),
     color: "success",
   };
 
@@ -192,7 +196,7 @@ function handleProductError(message: string) {
 
 async function confirmDeleteProduct(product: Product) {
   if (!product.code) {
-    handleProductError("Invalid product code for deletion.");
+    handleProductError(t("products.invalidCodeDelete"));
     return;
   }
 
@@ -200,14 +204,14 @@ async function confirmDeleteProduct(product: Product) {
     await deleteProduct(product.code);
     snackbar.value = {
       show: true,
-      text: "Product deleted successfully.",
+      text: t("products.deletedSuccess"),
       color: "success",
     };
 
     await loadProducts();
   } catch (error) {
     console.error("Error deleting product:", error);
-    handleProductError("Could not delete product. Please try again.");
+    handleProductError(resolveApiErrorMessage(error, t, { defaultKey: "products.couldNotDelete" }));
   }
 }
 </script>

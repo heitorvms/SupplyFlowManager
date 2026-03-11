@@ -2,15 +2,15 @@
   <v-card class="product-table-card" rounded="xl">
     <div class="table-toolbar">
       <div>
-        <h2>Product Catalog</h2>
+        <h2>{{ t("products.catalog") }}</h2>
       </div>
 
       <v-text-field
         :model-value="search"
         class="search-field"
         prepend-inner-icon="mdi-magnify"
-        label="Search product"
-        hint="Type at least 2 characters"
+        :label="t('products.searchLabel')"
+        :hint="t('common.typeAtLeastTwoChars')"
         persistent-hint
         variant="outlined"
         density="comfortable"
@@ -58,11 +58,11 @@
 
     <div class="table-footer">
       <p class="footer-range">
-        Showing {{ startItem }}-{{ endItem }} of {{ totalItems }} items
+        {{ t("common.showingItems", { start: startItem, end: endItem, total: totalItems }) }}
       </p>
 
       <div class="footer-controls">
-        <span class="page-size-label">Items</span>
+        <span class="page-size-label">{{ t("common.items") }}</span>
         <v-menu v-model="pageSizeMenu" location="top">
           <template #activator="{ props: menuProps }">
             <v-btn
@@ -103,7 +103,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useDisplay } from "vuetify";
+import { useI18n } from "vue-i18n";
 import type { Product } from "@/types/Product";
+import { formatCurrency as formatCurrencyByLocale } from "@/utils/numberFormat";
+import type { AppLocale } from "@/plugins/i18n";
 
 const props = defineProps<{
   products: Product[]
@@ -125,6 +128,7 @@ const emit = defineEmits<{
 const pageSizeMenu = ref(false);
 
 const { smAndDown } = useDisplay();
+const { t, locale } = useI18n();
 
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(props.totalItems / props.itemsPerPage))
@@ -142,12 +146,12 @@ const endItem = computed(() =>
   Math.min(props.totalItems, props.page * props.itemsPerPage)
 );
 
-const headers = [
-  { title: "Code", key: "code", width: 100 },
-  { title: "Name", key: "name" },
-  { title: "Price", key: "price", align: "end" as const, width: 140 },
-  { title: "Actions", key: "actions", sortable: false, align: "end" as const, width: 120 },
-];
+const headers = computed(() => [
+  { title: t("common.code"), key: "code", width: 100 },
+  { title: t("common.name"), key: "name" },
+  { title: t("products.fieldPrice"), key: "price", align: "end" as const, width: 140 },
+  { title: t("common.actions"), key: "actions", sortable: false, align: "end" as const, width: 120 },
+]);
 
 const itemsPerPageOptions = [
   { title: "5", value: 5 },
@@ -173,10 +177,7 @@ function onSelectItemsPerPage(value: number) {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
+  return formatCurrencyByLocale(value, locale.value as AppLocale);
 }
 </script>
 

@@ -9,8 +9,8 @@
     <v-card class="raw-material-form-card">
       <v-card-title class="form-title">
         <div>
-          <p class="form-kicker">Raw Material</p>
-          <h3>{{ props.rawMaterial ? "Edit Raw Material" : "New Raw Material" }}</h3>
+          <p class="form-kicker">{{ t("rawMaterials.formKicker") }}</p>
+          <h3>{{ props.rawMaterial ? t("rawMaterials.formEditTitle") : t("rawMaterials.formNewTitle") }}</h3>
         </div>
       </v-card-title>
 
@@ -19,7 +19,7 @@
           <v-col cols="12">
             <v-text-field
               v-model="form.name"
-              label="Name"
+              :label="t('common.name')"
               variant="outlined"
               density="comfortable"
               hide-details="auto"
@@ -30,7 +30,7 @@
           <v-col cols="12" md="6">
             <v-text-field
               v-model.number="form.stockQuantity"
-              label="Stock Quantity"
+              :label="t('rawMaterials.fieldStockQuantity')"
               type="number"
               min="0"
               step="0.001"
@@ -48,12 +48,12 @@
               :items="unitOptions"
               item-title="title"
               item-value="value"
-              label="Unit Type"
+              :label="t('rawMaterials.fieldUnitType')"
               variant="outlined"
               density="comfortable"
               hide-details="auto"
               :disabled="unitOptions.length === 0"
-              no-data-text="Nenhuma unidade carregada"
+              :no-data-text="t('rawMaterials.noUnitsLoaded')"
               :rules="[requiredRule]"
               auto-select-first
               @keydown="onUnitInputKeydown"
@@ -66,11 +66,11 @@
         <v-spacer class="action-spacer" />
 
         <v-btn class="action-btn" variant="text" @click="close">
-          Cancel
+          {{ t("common.cancel") }}
         </v-btn>
 
         <v-btn class="action-btn" color="primary" :loading="saving" @click="save">
-          Save
+          {{ t("common.save") }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -83,6 +83,8 @@ import { useDisplay } from "vuetify";
 import type { RawMaterial, UnitOfMeasure } from "@/types/RawMaterial";
 import { postRawMaterial, putRawMaterial } from "@/services/rawMaterialService";
 import { getUnitOfMeasureEnumsCached } from "@/services/enumService";
+import { useI18n } from "vue-i18n";
+import { resolveApiErrorMessage } from "@/utils/apiError";
 
 const props = defineProps<{
   modelValue: boolean
@@ -98,6 +100,7 @@ const emit = defineEmits<{
 const dialog = ref(false);
 const saving = ref(false);
 const { smAndDown } = useDisplay();
+const { t } = useI18n();
 
 const form = ref<RawMaterial>({
   name: "",
@@ -133,7 +136,7 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error("Error loading unit enums:", error);
-    emit("error", "Could not load unit enums.");
+    emit("error", resolveApiErrorMessage(error, t, { defaultKey: "rawMaterials.couldNotLoadEnums" }));
   }
 });
 
@@ -158,12 +161,12 @@ function close() {
   dialog.value = false;
 }
 
-const requiredRule = (value: string) => !!value || "Field is required";
-const quantityRule = (value: number) => value >= 0 || "Quantity must be non-negative";
+const requiredRule = (value: string) => !!value || t("common.fieldRequired");
+const quantityRule = (value: number) => value >= 0 || t("rawMaterials.quantityMustBeNonNegative");
 
 async function save() {
   if (!form.value.name?.trim() || !form.value.unitOfMeasure?.trim() || form.value.stockQuantity < 0) {
-    emit("error", "Please fill in the required fields correctly.");
+    emit("error", t("common.fillRequiredFields"));
     return;
   }
 
@@ -177,12 +180,9 @@ async function save() {
     close();
   } catch (error) {
     console.error("Error saving raw material:", error);
-    emit(
-      "error",
-      props.rawMaterial?.code
-        ? "Could not update raw material. Please try again."
-        : "Could not save raw material. Please try again.",
-    );
+    emit("error", resolveApiErrorMessage(error, t, {
+      defaultKey: props.rawMaterial?.code ? "rawMaterials.couldNotUpdate" : "rawMaterials.couldNotSave",
+    }));
   } finally {
     saving.value = false;
   }

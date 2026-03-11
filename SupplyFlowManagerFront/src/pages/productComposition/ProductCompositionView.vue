@@ -3,8 +3,8 @@
     <v-sheet class="hero" rounded="xl">
       <div class="hero-content">
         <div>
-          <h1>Product Composition</h1>
-          <p>Manage raw materials required to produce one unit of each product.</p>
+          <h1>{{ t("composition.title") }}</h1>
+          <p>{{ t("composition.subtitle") }}</p>
         </div>
 
         <v-autocomplete
@@ -14,12 +14,12 @@
           item-title="title"
           item-value="value"
           class="product-select"
-          label="Select Product"
+          :label="t('composition.selectProduct')"
           variant="outlined"
           density="comfortable"
           hide-details
           :loading="loadingProducts"
-          no-data-text="Nenhum produto encontrado"
+          :no-data-text="t('composition.noProductFound')"
           auto-select-first
           :menu-props="{ maxHeight: 320 }"
         />
@@ -59,6 +59,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import type { Product } from "@/types/Product";
 import type { RawMaterial } from "@/types/RawMaterial";
 import type {
@@ -76,6 +77,9 @@ import {
   getProductComposition,
   postProductComposition,
 } from "@/services/productCompositionService";
+import { resolveApiErrorMessage } from "@/utils/apiError";
+
+const { t } = useI18n();
 
 const products = ref<Product[]>([]);
 const rawMaterials = ref<RawMaterial[]>([]);
@@ -129,7 +133,7 @@ async function loadProducts() {
     }
   } catch (error) {
     console.error("Error loading products:", error);
-    showError("Could not load products.");
+    showError(resolveApiErrorMessage(error, t, { defaultKey: "composition.couldNotLoadProducts" }));
   } finally {
     loadingProducts.value = false;
   }
@@ -141,7 +145,7 @@ async function loadRawMaterials() {
     rawMaterials.value = response.content;
   } catch (error) {
     console.error("Error loading raw materials:", error);
-    showError("Could not load raw materials.");
+    showError(resolveApiErrorMessage(error, t, { defaultKey: "composition.couldNotLoadRawMaterials" }));
   }
 }
 
@@ -172,7 +176,7 @@ async function loadComposition(productId: number) {
     });
   } catch (error) {
     console.error("Error loading composition:", error);
-    showError("Could not load product composition.");
+    showError(resolveApiErrorMessage(error, t, { defaultKey: "composition.couldNotLoadComposition" }));
   } finally {
     loadingComposition.value = false;
   }
@@ -180,7 +184,7 @@ async function loadComposition(productId: number) {
 
 function openCreateDialog() {
   if (!selectedProductId.value) {
-    showError("Select a product before adding a raw material.");
+    showError(t("composition.selectProductBeforeAdding"));
     return;
   }
 
@@ -194,20 +198,20 @@ function openDeleteDialog(item: ProductCompositionItem) {
 
 async function handleSaveComposition(payload: SaveProductCompositionPayload) {
   if (!selectedProductId.value) {
-    showError("Select a product before saving composition.");
+    showError(t("composition.selectProductBeforeSaving"));
     return;
   }
 
   savingComposition.value = true;
   try {
     await postProductComposition(payload);
-    showSuccess("Raw material added to composition successfully.");
+    showSuccess(t("composition.addedSuccess"));
 
     formDialog.value = false;
     await loadComposition(selectedProductId.value);
   } catch (error) {
     console.error("Error saving composition:", error);
-    showError("Could not save composition. Please try again.");
+    showError(resolveApiErrorMessage(error, t, { defaultKey: "composition.couldNotSave" }));
   } finally {
     savingComposition.value = false;
   }
@@ -215,18 +219,18 @@ async function handleSaveComposition(payload: SaveProductCompositionPayload) {
 
 async function confirmDeleteComposition(item: ProductCompositionItem) {
   if (!item.id || !selectedProductId.value) {
-    showError("Invalid composition item for deletion.");
+    showError(t("composition.invalidDeleteItem"));
     return;
   }
 
   try {
     await deleteProductComposition(item.id);
-    showSuccess("Composition item removed successfully.");
+    showSuccess(t("composition.removedSuccess"));
     selectedCompositionItem.value = null;
     await loadComposition(selectedProductId.value);
   } catch (error) {
     console.error("Error deleting composition item:", error);
-    showError("Could not remove composition item.");
+    showError(resolveApiErrorMessage(error, t, { defaultKey: "composition.couldNotRemove" }));
   }
 }
 
