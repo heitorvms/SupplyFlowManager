@@ -2,8 +2,8 @@
   <v-card class="optimization-table-card" rounded="xl">
     <div class="table-toolbar">
       <div>
-        <h2>Optimization Result</h2>
-        <p>Estimated production capacity based on current stock levels.</p>
+        <h2>{{ t("optimization.resultTitle") }}</h2>
+        <p>{{ t("optimization.resultSubtitle") }}</p>
       </div>
     </div>
 
@@ -15,7 +15,7 @@
       item-value="productName"
       hover
       hide-default-footer
-      no-data-text="Click 'Analyze Production' to load optimization data"
+      :no-data-text="t('optimization.noData')"
     >
       <template #item.rank="{ item }">
         <div class="rank-badge" :class="getRankClass(item.rank)">
@@ -34,14 +34,18 @@
     </v-data-table>
 
     <div class="table-total">
-      <span>Total Top Sales Value</span>
+      <span>{{ t("optimization.totalTopSalesValue") }}</span>
       <strong>{{ formatCurrency(totalValue) }}</strong>
     </div>
   </v-card>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import type { ProductionOptimizationItem } from "@/types/ProductionOptimization";
+import { formatCurrency as formatCurrencyByLocale, formatNumber } from "@/utils/numberFormat";
+import type { AppLocale } from "@/plugins/i18n";
 
 defineProps<{
   items: Array<ProductionOptimizationItem & { rank: number }>
@@ -49,12 +53,14 @@ defineProps<{
   totalValue: number
 }>();
 
-const headers = [
-  { title: "Rank", key: "rank", align: "center" as const, width: 90 },
-  { title: "Product", key: "productName" },
-  { title: "Producible Quantity", key: "units", align: "end" as const, width: 260 },
-  { title: "Total Top Sales Value", key: "totalValue", align: "end" as const, width: 200 },
-];
+const { t, locale } = useI18n();
+
+const headers = computed(() => [
+  { title: t("optimization.rank"), key: "rank", align: "center" as const, width: 90 },
+  { title: t("optimization.product"), key: "productName" },
+  { title: t("optimization.producibleQuantity"), key: "units", align: "end" as const, width: 260 },
+  { title: t("optimization.totalTopSalesValue"), key: "totalValue", align: "end" as const, width: 200 },
+]);
 
 function getRankIcon(rank: number) {
   if (rank <= 3) {
@@ -81,19 +87,14 @@ function getRankClass(rank: number) {
 }
 
 function formatUnits(value: number) {
-  const safeValue = Number.isFinite(value) ? value : 0;
-  return new Intl.NumberFormat("pt-BR", {
+  return formatNumber(value, locale.value as AppLocale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 3,
-  }).format(safeValue);
+  });
 }
 
 function formatCurrency(value: number) {
-  const safeValue = Number.isFinite(value) ? value : 0;
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(safeValue);
+  return formatCurrencyByLocale(value, locale.value as AppLocale);
 }
 </script>
 

@@ -3,7 +3,7 @@
     <v-sheet class="hero" rounded="xl">
       <div class="hero-content">
         <div>
-          <h1>Raw Materials</h1>
+          <h1>{{ t("rawMaterials.title") }}</h1>
         </div>
 
         <v-btn
@@ -13,7 +13,7 @@
           prepend-icon="mdi-plus"
           @click="openCreate"
         >
-          New Raw Material
+          {{ t("rawMaterials.new") }}
         </v-btn>
       </div>
     </v-sheet>
@@ -55,6 +55,7 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import AppFeedbackSnackbar from "@/components/AppFeedbackSnackbar.vue";
 import RawMaterialTable from "@/components/rawMaterial/RawMaterialTable.vue";
 import RawMaterialForm from "@/components/rawMaterial/RawMaterialForm.vue";
@@ -64,6 +65,9 @@ import {
   deleteRawMaterial,
   getRawMaterials,
 } from "@/services/rawMaterialService";
+import { resolveApiErrorMessage } from "@/utils/apiError";
+
+const { t } = useI18n();
 
 const rawMaterials = ref<RawMaterial[]>([]);
 const totalItems = ref(0);
@@ -180,7 +184,7 @@ function openDelete(rawMaterial: RawMaterial) {
 function handleRawMaterialSaved() {
   snackbar.value = {
     show: true,
-    text: "Raw material saved successfully.",
+    text: t("rawMaterials.savedSuccess"),
     color: "success",
   };
 
@@ -197,7 +201,7 @@ function handleRawMaterialError(message: string) {
 
 async function confirmDeleteRawMaterial(rawMaterial: RawMaterial) {
   if (!rawMaterial.code) {
-    handleRawMaterialError("Invalid raw material code for deletion.");
+    handleRawMaterialError(t("rawMaterials.invalidCodeDelete"));
     return;
   }
 
@@ -205,14 +209,14 @@ async function confirmDeleteRawMaterial(rawMaterial: RawMaterial) {
     await deleteRawMaterial(rawMaterial.code);
     snackbar.value = {
       show: true,
-      text: "Raw material deleted successfully.",
+      text: t("rawMaterials.deletedSuccess"),
       color: "success",
     };
 
     await loadRawMaterials();
   } catch (error) {
     console.error("Error deleting raw material:", error);
-    handleRawMaterialError("Could not delete raw material. Please try again.");
+    handleRawMaterialError(resolveApiErrorMessage(error, t, { defaultKey: "rawMaterials.couldNotDelete" }));
   }
 }
 </script>

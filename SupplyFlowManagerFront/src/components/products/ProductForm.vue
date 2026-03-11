@@ -9,8 +9,8 @@
     <v-card class="product-form-card">
       <v-card-title class="form-title">
         <div>
-          <p class="form-kicker">Product</p>
-          <h3>{{ props.product ? "Edit Product" : "New Product" }}</h3>
+          <p class="form-kicker">{{ t("products.formKicker") }}</p>
+          <h3>{{ props.product ? t("products.formEditTitle") : t("products.formNewTitle") }}</h3>
         </div>
       </v-card-title>
 
@@ -19,7 +19,7 @@
           <v-col cols="12">
             <v-text-field
               v-model="form.name"
-              label="Product Name"
+              :label="t('products.fieldName')"
               variant="outlined"
               density="comfortable"
               hide-details="auto"
@@ -30,7 +30,7 @@
           <v-col cols="12">
             <v-text-field
               v-model.number="form.price"
-              label="Price"
+              :label="t('products.fieldPrice')"
               type="number"
               min="0"
               step="0.01"
@@ -48,11 +48,11 @@
         <v-spacer class="action-spacer" />
 
         <v-btn class="action-btn" variant="text" @click="close">
-          Cancel
+          {{ t("common.cancel") }}
         </v-btn>
 
         <v-btn class="action-btn" color="primary" :loading="saving" @click="save">
-          Save
+          {{ t("common.save") }}
         </v-btn>
 
       </v-card-actions>
@@ -67,6 +67,8 @@ import { watch, ref } from "vue"
 import type { Product } from "@/types/Product"
 import { postProduct, putProduct } from "@/services/productService";
 import { useDisplay } from "vuetify";
+import { useI18n } from "vue-i18n";
+import { resolveApiErrorMessage } from "@/utils/apiError";
 
 const props = defineProps<{
   modelValue: boolean
@@ -81,6 +83,7 @@ const emit = defineEmits<{
 
 const dialog = ref(false)
 const { smAndDown } = useDisplay();
+const { t } = useI18n();
 const saving = ref(false);
 
 const form = ref<Product>({
@@ -109,12 +112,12 @@ function close() {
   dialog.value = false
 }
 
-const requiredRule = (value: string) => !!value || "Name is required";
-const priceRule = (value: number) => value >= 0 || "Price must be non-negative";
+const requiredRule = (value: string) => !!value || t("products.nameRequired");
+const priceRule = (value: number) => value >= 0 || t("products.priceMustBeNonNegative");
 
 async function save() {
   if (!form.value.name?.trim() || form.value.price < 0) {
-    emit("error", "Please fill in the required fields correctly.");
+    emit("error", t("common.fillRequiredFields"));
     return;
   }
 
@@ -128,12 +131,9 @@ async function save() {
     close();
   } catch (error) {
     console.error("Error saving product:", error);
-    emit(
-      "error",
-      props.product?.code
-        ? "Could not update product. Please try again."
-        : "Could not save product. Please try again.",
-    );
+    emit("error", resolveApiErrorMessage(error, t, {
+      defaultKey: props.product?.code ? "products.couldNotUpdate" : "products.couldNotSave",
+    }));
   } finally {
     saving.value = false;
   }

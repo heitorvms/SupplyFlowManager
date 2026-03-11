@@ -9,8 +9,8 @@
     <v-card class="composition-form-card">
       <v-card-title class="form-title">
         <div>
-          <p class="form-kicker">Composition</p>
-          <h3>Add Raw Material</h3>
+          <p class="form-kicker">{{ t("composition.formKicker") }}</p>
+          <h3>{{ t("composition.formAddTitle") }}</h3>
         </div>
       </v-card-title>
 
@@ -22,7 +22,7 @@
               :items="rawMaterialOptions"
               item-title="title"
               item-value="value"
-              label="Raw Material"
+              :label="t('composition.fieldRawMaterial')"
               variant="outlined"
               density="comfortable"
               hide-details="auto"
@@ -34,7 +34,7 @@
           <v-col cols="12" md="6">
             <v-text-field
               v-model.number="form.quantityRequired"
-              label="Quantity Required"
+              :label="t('composition.fieldQuantityRequired')"
               type="number"
               min="0.001"
               step="0.001"
@@ -49,7 +49,7 @@
           <v-col cols="12" md="6">
             <v-text-field
               :model-value="form.unitOfMeasure"
-              label="Unit Of Measure"
+              :label="t('composition.fieldUnitOfMeasure')"
               variant="outlined"
               density="comfortable"
               readonly
@@ -63,11 +63,11 @@
         <v-spacer class="action-spacer" />
 
         <v-btn class="action-btn" variant="text" :disabled="saving" @click="close">
-          Cancel
+          {{ t("common.cancel") }}
         </v-btn>
 
         <v-btn class="action-btn" color="primary" :loading="saving" @click="save">
-          Save
+          {{ t("common.save") }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -77,6 +77,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
+import { useI18n } from "vue-i18n";
 import type { RawMaterial, UnitOfMeasure } from "@/types/RawMaterial";
 import type { SaveProductCompositionPayload } from "@/types/ProductComposition";
 
@@ -101,6 +102,7 @@ const emit = defineEmits<{
 
 const dialog = ref(false);
 const { smAndDown } = useDisplay();
+const { t } = useI18n();
 
 const form = ref<CompositionFormState>({
   rawMaterialId: null,
@@ -153,12 +155,12 @@ function close() {
 }
 
 const requiredNumberRule = (value: number | null) =>
-  Boolean(value) || "Raw material is required";
-const quantityRule = (value: number) => value > 0 || "Quantity must be greater than zero";
+  Boolean(value) || t("composition.rawMaterialRequired");
+const quantityRule = (value: number) => value > 0 || t("composition.quantityMustBeGreaterThanZero");
 
 function save() {
   if (!props.productId || !form.value.rawMaterialId || form.value.quantityRequired <= 0) {
-    emit("error", "Please fill in the required fields correctly.");
+    emit("error", t("common.fillRequiredFields"));
     return;
   }
 

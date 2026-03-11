@@ -19,7 +19,24 @@
       />
 
       <div class="topbar-title">
-        SupplyFlow Manager
+        {{ t("layout.appTitle") }}
+      </div>
+
+      <v-spacer />
+
+      <div class="language-switcher" :aria-label="t('layout.languageSwitcher')">
+        <v-btn
+          v-for="language in languageOptions"
+          :key="language.code"
+          class="language-btn"
+          variant="text"
+          :aria-label="t(language.labelKey)"
+          :title="t(language.labelKey)"
+          :class="{ 'language-btn-active': currentLocale === language.code }"
+          @click="setLocale(language.code)"
+        >
+          {{ language.flag }}
+        </v-btn>
       </div>
     </v-app-bar>
 
@@ -34,9 +51,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
+import { useI18n } from "vue-i18n";
 import Sidebar from '@/components/Sidebar.vue'
+import { useLanguageSwitcher } from "@/composables/useLanguageSwitcher";
 
 const { mdAndDown } = useDisplay();
+const { t } = useI18n();
+const { languageOptions, currentLocale, setLocale } = useLanguageSwitcher();
 const DESKTOP_DRAWER_WIDTH = 280;
 const DESKTOP_RAIL_WIDTH = 86;
 
@@ -115,6 +136,24 @@ function toggleRail() {
 .menu-toggle-btn {
   margin-inline-start: 0;
   margin-inline-end: 6px;
+}
+
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.language-btn {
+  min-width: 42px;
+  padding-inline: 8px;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 10px;
+}
+
+.language-btn-active {
+  background: rgba(25, 118, 210, 0.2);
 }
 
 .main-content {

@@ -2,8 +2,8 @@
   <v-card class="composition-table-card" rounded="xl">
     <div class="table-toolbar">
       <div>
-        <h2>Product Composition</h2>
-        <p>Raw materials required to produce one unit of the selected product.</p>
+        <h2>{{ t("composition.title") }}</h2>
+        <p>{{ t("composition.tableSubtitle") }}</p>
       </div>
 
       <v-btn
@@ -14,7 +14,7 @@
         :disabled="!selectedProductId"
         @click="$emit('add')"
       >
-        Add Raw Material
+        {{ t("composition.addRawMaterial") }}
       </v-btn>
     </div>
 
@@ -24,7 +24,7 @@
       :loading="loading"
       item-value="id"
       class="composition-table"
-      no-data-text="Select a product to view composition"
+      :no-data-text="t('composition.noDataSelectProduct')"
       hover
       hide-default-footer
     >
@@ -47,7 +47,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import type { ProductCompositionItem } from "@/types/ProductComposition";
+import { formatNumber } from "@/utils/numberFormat";
+import type { AppLocale } from "@/plugins/i18n";
 
 defineProps<{
   items: ProductCompositionItem[]
@@ -60,18 +64,20 @@ defineEmits<{
   (e: "delete", item: ProductCompositionItem): void
 }>();
 
-const headers = [
-  { title: "Raw Material", key: "rawMaterialName" },
-  { title: "Quantity Required", key: "quantityRequired", align: "end" as const, width: 180 },
-  { title: "Unit", key: "unitOfMeasure", align: "center" as const, width: 130 },
-  { title: "Actions", key: "actions", sortable: false, align: "end" as const, width: 120 },
-];
+const { t, locale } = useI18n();
+
+const headers = computed(() => [
+  { title: t("composition.fieldRawMaterial"), key: "rawMaterialName" },
+  { title: t("composition.fieldQuantityRequired"), key: "quantityRequired", align: "end" as const, width: 180 },
+  { title: t("rawMaterials.fieldUnit"), key: "unitOfMeasure", align: "center" as const, width: 130 },
+  { title: t("common.actions"), key: "actions", sortable: false, align: "end" as const, width: 120 },
+]);
 
 function formatQuantity(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
+  return formatNumber(value, locale.value as AppLocale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 3,
-  }).format(value);
+  });
 }
 </script>
 
