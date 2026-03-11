@@ -17,8 +17,9 @@
       <v-card-text class="form-content">
         <v-row>
           <v-col cols="12">
-            <v-select
+            <v-autocomplete
               v-model="form.rawMaterialId"
+              v-model:search="rawMaterialSearch"
               :items="rawMaterialOptions"
               item-title="title"
               item-value="value"
@@ -27,7 +28,10 @@
               density="comfortable"
               hide-details="auto"
               :rules="[requiredNumberRule]"
-              :disabled="saving"
+              :disabled="saving || rawMaterialOptions.length === 0"
+              :no-data-text="t('composition.noRawMaterialsLoaded')"
+              auto-select-first
+              @keydown="onRawMaterialInputKeydown"
             />
           </v-col>
 
@@ -62,11 +66,21 @@
       <v-card-actions class="form-actions">
         <v-spacer class="action-spacer" />
 
-        <v-btn class="action-btn" variant="text" :disabled="saving" @click="close">
+        <v-btn
+          class="action-btn"
+          variant="text"
+          :disabled="saving"
+          @click="close"
+        >
           {{ t("common.cancel") }}
         </v-btn>
 
-        <v-btn class="action-btn" color="primary" :loading="saving" @click="save">
+        <v-btn
+          class="action-btn"
+          color="primary"
+          :loading="saving"
+          @click="save"
+        >
           {{ t("common.save") }}
         </v-btn>
       </v-card-actions>
@@ -82,27 +96,28 @@ import type { RawMaterial, UnitOfMeasure } from "@/types/RawMaterial";
 import type { SaveProductCompositionPayload } from "@/types/ProductComposition";
 
 type CompositionFormState = {
-  rawMaterialId: number | null
-  quantityRequired: number
-  unitOfMeasure: UnitOfMeasure
+  rawMaterialId: number | null;
+  quantityRequired: number;
+  unitOfMeasure: UnitOfMeasure;
 };
 
 const props = defineProps<{
-  modelValue: boolean
-  productId: number | null
-  rawMaterials: RawMaterial[]
-  saving: boolean
+  modelValue: boolean;
+  productId: number | null;
+  rawMaterials: RawMaterial[];
+  saving: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: boolean): void
-  (e: "submit", payload: SaveProductCompositionPayload): void
-  (e: "error", message: string): void
+  (e: "update:modelValue", value: boolean): void;
+  (e: "submit", payload: SaveProductCompositionPayload): void;
+  (e: "error", message: string): void;
 }>();
 
 const dialog = ref(false);
 const { smAndDown } = useDisplay();
 const { t } = useI18n();
+const rawMaterialSearch = ref("");
 
 const form = ref<CompositionFormState>({
   rawMaterialId: null,
@@ -118,7 +133,9 @@ const rawMaterialOptions = computed(() =>
 );
 
 const selectedRawMaterial = computed(() =>
-  props.rawMaterials.find((rawMaterial) => rawMaterial.code === form.value.rawMaterialId),
+  props.rawMaterials.find(
+    (rawMaterial) => rawMaterial.code === form.value.rawMaterialId,
+  ),
 );
 
 watch(
@@ -156,10 +173,15 @@ function close() {
 
 const requiredNumberRule = (value: number | null) =>
   Boolean(value) || t("composition.rawMaterialRequired");
-const quantityRule = (value: number) => value > 0 || t("composition.quantityMustBeGreaterThanZero");
+const quantityRule = (value: number) =>
+  value > 0 || t("composition.quantityMustBeGreaterThanZero");
 
 function save() {
-  if (!props.productId || !form.value.rawMaterialId || form.value.quantityRequired <= 0) {
+  if (
+    !props.productId ||
+    !form.value.rawMaterialId ||
+    form.value.quantityRequired <= 0
+  ) {
     emit("error", t("common.fillRequiredFields"));
     return;
   }
@@ -169,6 +191,20 @@ function save() {
     rawMaterialId: form.value.rawMaterialId,
     quantityRequired: form.value.quantityRequired,
   });
+}
+
+function onRawMaterialInputKeydown(event: KeyboardEvent) {
+  const allowedKeys = new Set([
+    "ArrowDown",
+    "ArrowUp",
+    "Enter",
+    "Escape",
+    "Tab",
+  ]);
+
+  if (!allowedKeys.has(event.key)) {
+    event.preventDefault();
+  }
 }
 </script>
 
